@@ -58,7 +58,7 @@ Mat guided_filter_tipri(const Mat& originG, const Mat& originR, const Mat& mask,
 
 	//Weighted Average
 	Mat dif;
-	Mat dif1 = a.mul(a).mul(box_filter_modified(G.mul(G).mul(mask), h, v));
+	/*Mat dif1 = a.mul(a).mul(box_filter_modified(G.mul(G).mul(mask), h, v));
 	Mat dif2 = b.mul(b).mul(N3);
 	Mat dif3 = box_filter_modified(R.mul(R).mul(mask), h, v);
 	Mat dif4 = a.mul(b).mul(box_filter_modified(G.mul(mask), h, v));
@@ -67,10 +67,12 @@ Mat guided_filter_tipri(const Mat& originG, const Mat& originR, const Mat& mask,
 	dif5 = dif5 + dif5;
 	Mat dif6 = a.mul(box_filter_modified(R.mul(G).mul(mask), h, v));
 	dif6 = dif6 + dif6;
-	dif = dif1 + dif2 + dif3 + dif4 - dif5 - dif6;
-	divide(dif, N3, dif);
-	//dif = dif.mul(1);
-	float th = 0.00001;
+	dif = dif1 + dif2 + dif3 + dif4 - dif5 - dif6;*/
+	/*dif = (box_filter_modified(G.mul(G).mul(mask), h, v).mul(a).mul(a)) + (b.mul(b).mul(N3)) + (box_filter_modified(R.mul(R).mul(mask), h, v)) + (a.mul(b).mul(box_filter_modified(G.mul(mask), h, v))) + (a.mul(b).mul(box_filter_modified(G.mul(mask), h, v))) - (b.mul(box_filter_modified(R.mul(mask), h, v))) - (b.mul(box_filter_modified(R.mul(mask), h, v))) - (a.mul(box_filter_modified(R.mul(G).mul(mask), h, v))) - (a.mul(box_filter_modified(R.mul(G).mul(mask), h, v)));
+	divide(dif, N3, dif);*/
+	//Mat tempk = cv::Mat::ones(dif.size(),CV_8U);
+	//dif = dif.mul(tempk);
+	float th = 0.01;
 	for (int row = 0; row < dif.rows; row++) {
 		float* p = dif.ptr<float>(row);
 		for (int col = 0; col < dif.cols; col++) {

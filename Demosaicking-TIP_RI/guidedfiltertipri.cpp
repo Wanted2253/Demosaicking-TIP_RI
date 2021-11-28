@@ -21,6 +21,7 @@ Mat box_filter_modified(const Mat& I, int h, int v) {
 // h, v: local window radius
 // eps: Regularization Parameter
 Mat guided_filter_tipri(const Mat& originG, const Mat& originR, const Mat& mask, const Mat& originI, const Mat& originP, const Mat& M, int h = 2, int v = 2, float eps = 0.0) {
+	bool flag = false;
 	Mat p, I, G, R;
 	G = originG.clone();
 	R = originR.clone();
@@ -38,7 +39,15 @@ Mat guided_filter_tipri(const Mat& originG, const Mat& originR, const Mat& mask,
 	divide(mean_IP, N, mean_IP);
 	Mat mean_II = box_filter_modified(I.mul(I).mul(M), h, v);
 	divide(mean_II, N, mean_II);
-	
+	float th = 0.00001;
+	for (int row = 0; row < mean_II.rows; row++) {
+		float* p = mean_II.ptr<float>(row);
+		for (int col = 0; col < mean_II.cols; col++) {
+			if (p[col] < th) {
+				p[col] = th;
+			}
+		}
+	}
 	Mat a;
 	if (mean_II.channels() == 3) {
 		a = mean_IP / (mean_II + Scalar(eps, eps, eps)); //otherwise only 1 channel get added
@@ -58,21 +67,28 @@ Mat guided_filter_tipri(const Mat& originG, const Mat& originR, const Mat& mask,
 
 	//Weighted Average
 	Mat dif;
-	/*Mat dif1 = a.mul(a).mul(box_filter_modified(G.mul(G).mul(mask), h, v));
+	Mat dif1 = a.mul(a).mul((box_filter_modified(G.mul(G).mul(mask), h, v)));
 	Mat dif2 = b.mul(b).mul(N3);
 	Mat dif3 = box_filter_modified(R.mul(R).mul(mask), h, v);
 	Mat dif4 = a.mul(b).mul(box_filter_modified(G.mul(mask), h, v));
-	dif4 = dif4 + dif4;
-	Mat dif5 = box_filter_modified(R.mul(mask), h, v);
-	dif5 = dif5 + dif5;
+	dif4 *= 2;
+	Mat dif5 = b.mul(box_filter_modified(R.mul(mask), h, v));
+	dif5 = dif5 * 2;
 	Mat dif6 = a.mul(box_filter_modified(R.mul(G).mul(mask), h, v));
-	dif6 = dif6 + dif6;
-	dif = dif1 + dif2 + dif3 + dif4 - dif5 - dif6;*/
-	/*dif = (box_filter_modified(G.mul(G).mul(mask), h, v).mul(a).mul(a)) + (b.mul(b).mul(N3)) + (box_filter_modified(R.mul(R).mul(mask), h, v)) + (a.mul(b).mul(box_filter_modified(G.mul(mask), h, v))) + (a.mul(b).mul(box_filter_modified(G.mul(mask), h, v))) - (b.mul(box_filter_modified(R.mul(mask), h, v))) - (b.mul(box_filter_modified(R.mul(mask), h, v))) - (a.mul(box_filter_modified(R.mul(G).mul(mask), h, v))) - (a.mul(box_filter_modified(R.mul(G).mul(mask), h, v)));
-	divide(dif, N3, dif);*/
-	//Mat tempk = cv::Mat::ones(dif.size(),CV_8U);
-	//dif = dif.mul(tempk);
-	float th = 0.01;
+	dif6 = dif6 * 2;
+	dif = dif1 + dif2 + dif3 + dif4 - dif5 - dif6;
+	divide(dif, N3, dif);
+	for (int row = 0; row < dif.rows; row++) {
+		float* p = dif.ptr<float>(row);
+		for (int col = 0; col < dif.cols; col++) {
+			if (flag == false) {
+				cout << p[col] << endl;
+				flag = true;
+			}
+			
+		}
+	}
+	th = 0.01;
 	for (int row = 0; row < dif.rows; row++) {
 		float* p = dif.ptr<float>(row);
 		for (int col = 0; col < dif.cols; col++) {
@@ -98,5 +114,6 @@ Mat guided_filter_tipri(const Mat& originG, const Mat& originR, const Mat& mask,
 	divide(mean_b, wdif, mean_b);
 	// step: 5
 	Mat q = mean_a.mul(G) + mean_b;
+	
 	return q;
 }

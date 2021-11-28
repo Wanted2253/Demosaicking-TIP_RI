@@ -15,6 +15,7 @@ int main() {
 	Demosaic(img, dst, pattern);
 	/*double k = getpsnr(dst, img);
 	cout << k;*/
+
 	imshow("Image", dst);
 	waitKey(0);
 	return 0;

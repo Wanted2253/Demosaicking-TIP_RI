@@ -117,6 +117,7 @@ void demosaic_tipri(cv::Mat& Bayer, cv::Mat& Dst, float sigma = 1.0) {
 	Mat diffr2H, diffGr2H;
 	filter2D(bgr[1].mul(maskGr), diffGr2H, -1, FHK);
 	filter2D(GuideR_H.mul(maskGr), diffr2H, -1, FHK);
+
 	Mat tentativeGr_H = guided_filter_tipri(GuideR_H, bgr[1].mul(maskGr), maskGr, diffr2H, diffGr2H, maskGr, h, v, eps);// need mul(mask) because Green has two location
 	Mat diffb1H, diffGb1H;
 	filter2D(bgr[0], diffb1H, -1, FHK);
@@ -135,17 +136,18 @@ void demosaic_tipri(cv::Mat& Bayer, cv::Mat& Dst, float sigma = 1.0) {
 	filter2D(GuideG_V.mul(mask[2]), diffGr1V, -1, FVK);
 	Mat tentativeR_V = guided_filter_tipri(GuideG_V, bgr[2], mask[2], diffGr1V, diffr1V, mask[2], v, h, eps);//G,R,mask,I,P,M,h,v,eps
 	Mat diffr2V, diffGr2V;
-	filter2D(bgr[1].mul(maskGr), diffGr2V, -1, FVK);
-	filter2D(GuideR_V.mul(maskGr), diffr2V, -1, FVK);
-	Mat tentativeGr_V = guided_filter_tipri(GuideR_V, bgr[1].mul(maskGr), maskGr, diffr2V, diffGr2V, maskGr, v, h, eps);// need mul(mask) because Green has two location
+	filter2D(bgr[1].mul(maskGb), diffGr2V, -1, FVK);
+	filter2D(GuideR_V.mul(maskGb), diffr2V, -1, FVK);
+	
+	Mat tentativeGr_V = guided_filter_tipri(GuideR_V, bgr[1].mul(maskGb), maskGb, diffr2V, diffGr2V, maskGb, v, h, eps);// need mul(mask) because Green has two location
 	Mat diffb1V, diffGb1V;
 	filter2D(bgr[0], diffb1V, -1, FVK);
 	filter2D(GuideG_V.mul(mask[0]), diffGb1V, -1, FVK);
 	Mat tentativeB_V = guided_filter_tipri(GuideG_V, bgr[0], mask[0], diffGb1V, diffb1V, mask[0], v, h, eps);
 	Mat diffb2V, diffGb2V;
-	filter2D(bgr[1].mul(maskGb), diffGb2V, -1, FVK);
-	filter2D(GuideB_V.mul(maskGb), diffb2V, -1, FVK);
-	Mat tentativeGb_V = guided_filter_tipri(GuideB_V, bgr[1].mul(maskGb), maskGb, diffb2V, diffGb2V, maskGb, v, h, eps);
+	filter2D(bgr[1].mul(maskGr), diffGb2V, -1, FVK);
+	filter2D(GuideB_V.mul(maskGr), diffb2V, -1, FVK);
+	Mat tentativeGb_V = guided_filter_tipri(GuideB_V, bgr[1].mul(maskGr), maskGr, diffb2V, diffGb2V, maskGr, v, h, eps);
 
 	//release Guided Image
 	GuideG_H.release();
@@ -185,11 +187,11 @@ void demosaic_tipri(cv::Mat& Bayer, cv::Mat& Dst, float sigma = 1.0) {
 	Mat Gb_V = (tentativeGb_V + residualGb_V).mul(mask[0]);
 	Mat R_V = (tentativeR_V + residualR_V).mul(maskGb);
 	Mat B_V = (tentativeB_V + residualB_V).mul(maskGr);
-
+	
 	// Vertical and horizontal color difference 
 	Mat dif_H = bgr[1] + Gr_H + Gb_H - bgr[2] - bgr[0] - R_H - B_H;
 	Mat dif_V = bgr[1] + Gr_V + Gb_V - bgr[2] - bgr[0] - R_V - B_V;
-
+	
 	//Release the rest
 	tentativeR_H.release();
 	tentativeGr_H.release();
@@ -273,7 +275,7 @@ void demosaic_tipri(cv::Mat& Bayer, cv::Mat& Dst, float sigma = 1.0) {
 	Mat imask = (mask[1] == 0); //[0, 1, 1] -> [255, 0, 0]
 	imask.convertTo(imask, CV_32F, 1.0 / 255.0);
 	finalBGR[1] = finalBGR[1].mul(imask) + bgr[1];
-
+	
 	// clip to 0~1
 
 	threshold(finalBGR[1], finalBGR[1], 1.0, 1.0, THRESH_TRUNC); // > 1 to 1
